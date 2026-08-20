@@ -4,6 +4,12 @@ Tracks all implementation work for the EazWorld AI Tutor (independent project).
 Plan: [`EazWorld-AI-Tutor-Plan.md`](./EazWorld-AI-Tutor-Plan.md)
 Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
+> **Git workflow (user-directed):** every new phase gets its **own branch** off
+> `main`, named `phase/<n>-<slug>` (e.g. `phase/1-tutor-mvp`). Work happens on the
+> branch and it's pushed to `origin` so progress is backed up; `main` only receives
+> finished phase work. If we're mid-phase and a new phase starts, the current branch
+> is completed/merged first.
+
 ---
 
 ## Current milestone: Phase 0 — Foundation (done)
