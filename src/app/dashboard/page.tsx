@@ -206,13 +206,17 @@ export default async function DashboardPage() {
           <SectionTitle>Ready to learn?</SectionTitle>
           <EmptyState
             icon="graduation-cap"
-            title="Your tutor is being prepared"
+            title="Your tutor is ready"
             hint={
               profile
-                ? `The tutor experience arrives in the next phase. For now you're all set up — daily limit: ${profile.dailySessionLimit} sessions.`
-                : "The tutor experience arrives in the next phase. For now you're all set up."
+                ? `Eazi will help you practise today. Daily limit: ${profile.dailySessionLimit} sessions.`
+                : "Eazi will help you practise today."
             }
-          />
+          >
+            <Link href="/tutor">
+              <Button>Start learning</Button>
+            </Link>
+          </EmptyState>
         </Section>
       </Shell>
     );

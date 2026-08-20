@@ -67,19 +67,29 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 ## Phase 1 — Tutor MVP (walking skeleton)
 
-- [ ] Provider abstraction (`AiProvider` interface + factory + fallback)
-- [ ] OpenAI adapter (non-streaming, then streaming)
-- [ ] Tutor Orchestrator v1 (intents: explain / ask / hint / correct / recommend / smalltalk / unsafe)
-- [ ] Safety gate in/out (Mongoose/JSON-schema validation + Moderation API + keyword classifier)
-- [ ] TutorSession + TutorMessage + LearningSignal models
-- [ ] SkillMastery scoring v1
-- [ ] Streaming message endpoint (`POST /api/v1/tutor/sessions/:id/messages`)
-- [ ] Session create / get / end endpoints
-- [ ] Message + session caps (rate limiting, Upstash)
-- [ ] Tutor UI: mascot avatar, session flow, MCQ + free-text widgets, hint reveal, encouragement, end-of-session summary
-- [ ] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (2 skills per subject, 3–5 items each)
-- [ ] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) gated in CI
-- [ ] AI cost per session logged (UsageLog)
+> Working branch: `phase/1-tutor-mvp` (pushed). Test/debug on the branch before any merge to main.
+> Env additions this phase (`.env.example` is gitignored — new vars are documented here):
+> `AI_PROVIDER` (openai), `OPENAI_API_KEY`, `OPENAI_MODEL_TUTOR` (gpt-4o-mini),
+> `OPENAI_MODEL_STRUCTURED` (gpt-4o-mini).
+> BLOCKED ON: real Atlas `MONGO_URL` + `OPENAI_API_KEY` in `.env` for seed + live E2E
+> (placeholders `<cluster>`/empty remain; `npm run seed` fails `querySrv EBADNAME`).
+
+- [x] Provider abstraction (`AiProvider` interface + factory + fallback)
+- [x] OpenAI adapter (non-streaming structured + streaming + moderation) — `src/features/tutor/providers/`
+- [x] Tutor Orchestrator v1 (intents: explain / ask / hint / practice / correct / recommend / smalltalk / session_end; envelope; retry-then-fallback)
+- [x] Safety gate in/out (Mongoose/JSON-schema validation + Moderation API + keyword classifier + output leak checks) — `src/features/tutor/safety/`
+- [x] TutorSession (completionReason, skillId) + TutorMessage + LearningSignal + SkillMastery + SafetyEvent + UsageLog models
+- [x] SkillMastery scoring v1 (EMA + evidence gate) — `src/features/tutor/engine/mastery.ts`
+- [x] Streaming message endpoint (`POST /api/v1/tutor/sessions/:id/messages`, SSE: meta/delta/blocked/done/error)
+- [x] Session create / get / end endpoints
+- [x] Message + session caps (DB-backed daily/session caps for MVP; Upstash later) — `src/features/tutor/caps.ts`
+- [x] Tutor UI: session flow, MCQ + free-text widgets, hint reveal, encouragement, end-of-session summary — `src/app/tutor/`
+- [x] Student dashboard CTA → `/tutor`
+- [~] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (4 skills, 5 items each) — `scripts/seed.ts` written, **not run** (DB blocked)
+- [x] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) — 82 new tests, 127 total green
+- [x] AI cost per session logged (UsageLog)
+- [ ] Live E2E verify (seed → login student → tutor session → streamed turn → end) — blocked on real `.env`
+- [ ] `scripts/verify-phase0.sh` re-run to confirm no regressions — blocked on real `.env`
 
 ## Phase 2 — Curriculum integration
 
@@ -147,4 +157,4 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 - Every phase's "Done when" criteria from the plan must pass (tests/evals + live end-to-end demo).
 - Do not add payment/billing, teacher features, native apps, real-time multi-user, offline mode, or a CMS without reopening scope.
-- Env-driven config via `.env`; keep `.env.example` template current.
+- Env-driven config via `.env` (user-directed: `.env*` gitignored; new config vars are documented in this tracker's phase sections).
