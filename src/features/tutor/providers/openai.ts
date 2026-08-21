@@ -15,6 +15,8 @@ import type {
   AiProvider,
   CompletionRequest,
   CompletionResponse,
+  EmbedRequest,
+  EmbedResponse,
   JsonSchema,
   ModerationRequest,
   ModerationResult,
@@ -27,6 +29,9 @@ export const OPENAI_MODEL_DEFAULTS: ModelMap = {
   tutor: "gpt-4o-mini",
   structured: "gpt-4o-mini",
 };
+
+/** OpenAI embeddings accept large batches; 100 keeps requests well under limits. */
+const EMBED_BATCH_SIZE = 100;
 
 export class OpenAIAdapter implements AiProvider {
   readonly name = "openai";
@@ -111,6 +116,32 @@ export class OpenAIAdapter implements AiProvider {
     } catch (error) {
       throw toProviderError(error);
     }
+  }
+
+  /**
+   * Embeddings for curriculum retrieval (§14). Splits into provider-sized
+   * batches; vector order matches input order. Model comes from
+   * OPENAI_EMBEDDING_MODEL (default text-embedding-3-small, 1536-dim).
+   */
+  async embed(req: EmbedRequest): Promise<EmbedResponse> {
+    const client = this.getClient();
+    const model = getEnv().OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
+    const vectors: number[][] = [];
+    try {
+      for (let i = 0; i < req.texts.length; i += EMBED_BATCH_SIZE) {
+        const batch = req.texts.slice(i, i + EMBED_BATCH_SIZE);
+        const result = await client.embeddings.create({ model, input: batch });
+        for (const row of result.data) vectors.push(row.embedding);
+      }
+    } catch (error) {
+      throw toProviderError(error);
+    }
+    if (vectors.length !== req.texts.length) {
+      throw new Error(
+        `embedding_count_mismatch: requested ${req.texts.length}, received ${vectors.length}`
+      );
+    }
+    return { vectors, model };
   }
 
   async moderate(req: ModerationRequest): Promise<ModerationResult> {

@@ -24,6 +24,8 @@ export interface Env {
   OPENAI_API_KEY?: string;
   OPENAI_MODEL_TUTOR?: string;
   OPENAI_MODEL_STRUCTURED?: string;
+  /** Embedding model for curriculum retrieval (plan §14; default text-embedding-3-small). */
+  OPENAI_EMBEDDING_MODEL?: string;
   /** Message cap per tutor session (plan §28, §30). */
   SESSION_MSG_CAP: number;
   /** Session cap per student per day. */
@@ -113,6 +115,7 @@ export function getEnv(source: NodeJS.ProcessEnv = process.env): Env {
     OPENAI_API_KEY: source.OPENAI_API_KEY?.trim(),
     OPENAI_MODEL_TUTOR: source.OPENAI_MODEL_TUTOR?.trim(),
     OPENAI_MODEL_STRUCTURED: source.OPENAI_MODEL_STRUCTURED?.trim(),
+    OPENAI_EMBEDDING_MODEL: source.OPENAI_EMBEDDING_MODEL?.trim(),
     SESSION_MSG_CAP: requireInt(source, "SESSION_MSG_CAP", 30),
     DAILY_SESSION_CAP: requireInt(source, "DAILY_SESSION_CAP", 3),
     RETENTION_DAYS: requireInt(source, "RETENTION_DAYS", 30),

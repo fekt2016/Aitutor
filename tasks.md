@@ -93,11 +93,13 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 ## Phase 2 — Curriculum integration
 
+> Working branch: `phase/2-curriculum`.
+
 - [ ] Strand / SubStrand / ContentStandard / Skill / Lesson / Item collections + admin CRUD
-- [ ] CurriculumChunk + Atlas Search index + embeddings
+- [~] CurriculumChunk + Atlas Search index + embeddings (model ✓ committed; chunk backfill script + embedding backfill next)
 - [ ] Curriculum service + tools (`search_curriculum`, `get_current_lesson`)
-- [ ] Hybrid retrieval (Atlas Search + Vector Search)
-- [ ] Grounding + RAG wiring in orchestrator
+- [~] Hybrid retrieval (Atlas $search → $text → regex tiers ✓; Vector Search tier once embeddings exist)
+- [x] Grounding: thin lessons augmented from curriculum corpus, wired into orchestrator (`src/features/tutor/curriculum/grounding.ts`)
 - [ ] Admin curriculum editor UI + grounded lesson view
 - [ ] Retrieval + grounding evals
 

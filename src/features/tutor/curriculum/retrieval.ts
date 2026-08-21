@@ -37,11 +37,17 @@ export interface SearchCurriculumInput {
 
 export async function searchCurriculum(input: SearchCurriculumInput): Promise<CurriculumHit[]> {
   const limit = Math.min(Math.max(input.limit ?? 3, 1), 10);
+  // Tier A degrades on BOTH failure modes: $search throwing (unsupported
+  // stage / missing index) AND succeeding with zero rows (index exists but
+  // empty or still building — observed live on Atlas). Only non-empty hits
+  // short-circuit the cheaper tiers below.
   try {
-    return await atlasSearch(input, limit);
+    const hits = await atlasSearch(input, limit);
+    if (hits.length > 0) return hits;
   } catch {
-    return await fallbackSearch(input, limit);
+    // fall through to the standard-index tiers
   }
+  return await fallbackSearch(input, limit);
 }
 
 /* ---------------------------- Tier A: $search ---------------------------- */

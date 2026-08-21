@@ -57,6 +57,17 @@ export interface ModerationRequest {
   text: string;
 }
 
+export interface EmbedRequest {
+  /** Batch of texts to embed; adapters may split into provider-sized calls. */
+  texts: string[];
+}
+
+export interface EmbedResponse {
+  /** One vector per input text, same order. */
+  vectors: number[][];
+  model: string;
+}
+
 /**
  * Thrown by adapters when the Moderation endpoint is unreachable or failing
  * (network, 429 rate limit, 5xx, auth). The safety layer falls back to the
@@ -76,6 +87,7 @@ export interface AiProvider {
   complete(req: CompletionRequest): Promise<CompletionResponse>;
   stream(req: CompletionRequest): AsyncIterable<StreamChunk>;
   moderate(req: ModerationRequest): Promise<ModerationResult>;
+  embed(req: EmbedRequest): Promise<EmbedResponse>;
   /** Human-readable provider name for UsageLog/model attribution. */
   readonly name: string;
 }

@@ -57,6 +57,20 @@ describe("searchCurriculum — tier degradation", () => {
     expect(query.$text).toEqual({ $search: "counting on addition" });
   });
 
+  it("falls through when Atlas Search succeeds but returns zero rows (index empty/building)", async () => {
+    // Observed live: $search resolves [] instead of throwing when the search
+    // index exists but has not indexed the collection yet.
+    vi.spyOn(CurriculumChunkModel, "aggregate").mockResolvedValue([]);
+    const find = vi
+      .spyOn(CurriculumChunkModel, "find")
+      .mockReturnValue({ sort: () => ({ limit: () => ({ lean: async () => [row()] }) }) } as never);
+
+    const hits = await searchCurriculum({ query: "counting on" });
+
+    expect(hits).toHaveLength(1);
+    expect(find).toHaveBeenCalled();
+  });
+
   it("tier C: regex term match works when even the text index is missing", async () => {
     vi.spyOn(CurriculumChunkModel, "aggregate").mockRejectedValue(new Error("no atlas"));
     const find = vi
@@ -91,6 +105,10 @@ describe("searchCurriculum — tier degradation", () => {
   it("applies scope filters (subject/skill/grade) as ObjectIds", async () => {
     const aggregate = vi.fn().mockResolvedValue([]);
     vi.spyOn(CurriculumChunkModel, "aggregate").mockImplementation(aggregate);
+    // Empty tier-A result falls through — keep the fallback hermetic too.
+    vi.spyOn(CurriculumChunkModel, "find").mockReturnValue({
+      sort: () => ({ limit: () => ({ lean: async () => [] }) }),
+    } as never);
 
     await searchCurriculum({
       query: "fractions",
