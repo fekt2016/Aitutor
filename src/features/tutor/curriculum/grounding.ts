@@ -1,16 +1,24 @@
 /**
- * Grounding augmentation (plan §6.3, §35.4) — when the resolved lesson is
- * thin, retrieve supporting material from the curriculum corpus so the tutor
- * reasons over the knowledge base instead of inventing content. The material
- * is folded into the lesson body BEFORE the memory builder clamps it, so the
- * total curriculum budget (§13) still holds. Never throws: a retrieval
- * problem must not break a child's turn (§37).
+ * Grounding augmentation (plan §6.3, §35.4) — folds supporting material from
+ * the curriculum corpus into the lesson body BEFORE the memory builder clamps
+ * it, so the total curriculum budget (§13) still holds. The tutor then reasons
+ * over the knowledge base instead of inventing content.
+ *
+ * Turn policy (one retrieval per turn, via the §15 tool layer):
+ * - thin lesson (< THIN_LESSON_CHARS): query from skill context (§6.3(3));
+ * - full lesson + a substantive child question: query from the question so
+ *   specific asks ("what is a numerator?") pull the right support.
+ * Never throws: a retrieval problem must not break a child's turn (§37).
  */
 import type { CurriculumBundle } from "./service";
-import { searchCurriculum, type CurriculumHit } from "./retrieval";
+import { searchCurriculumTool } from "../tools/curriculum";
+import { runTool } from "../tools/types";
+import type { CurriculumHit } from "./retrieval";
 
 /** Lessons shorter than this get supporting material pulled in. */
 export const THIN_LESSON_CHARS = 600;
+/** Questions shorter than this rarely name a retrievable concept. */
+const MIN_QUESTION_CHARS = 8;
 const MAX_SUPPORT_CHUNKS = 3;
 const SUPPORT_HEADING = "\n\nSUPPORTING MATERIAL FROM THE CURRICULUM:";
 
@@ -21,22 +29,29 @@ export function renderSupportingMaterial(hits: CurriculumHit[]): string {
 /** Mutates bundle.lessonBody in place when support was found. */
 export async function augmentWithSupportingMaterial(
   bundle: CurriculumBundle,
-  opts: { subjectId?: string | null; gradeLevelId?: string | null; query?: string } = {}
+  opts: {
+    userMessage?: string;
+    subjectId?: string | null;
+    gradeLevelId?: string | null;
+  } = {}
 ): Promise<void> {
-  if (bundle.lessonBody.length >= THIN_LESSON_CHARS) return;
+  const thin = bundle.lessonBody.length < THIN_LESSON_CHARS;
+  const question = opts.userMessage?.trim() ?? "";
+  if (!thin && question.length < MIN_QUESTION_CHARS) return;
 
-  try {
-    const hits = await searchCurriculum({
-      query:
-        opts.query ?? `${bundle.skillName} ${bundle.objective} ${bundle.lessonTitle}`.trim(),
-      subjectId: opts.subjectId ?? null,
-      skillId: bundle.skillId,
-      gradeLevelId: opts.gradeLevelId ?? null,
-      limit: MAX_SUPPORT_CHUNKS,
-    });
-    if (hits.length === 0) return;
-    bundle.lessonBody = `${bundle.lessonBody}${SUPPORT_HEADING}\n${renderSupportingMaterial(hits)}`;
-  } catch {
-    // Lesson body stands alone — never break a turn over retrieval (§37).
-  }
+  const query = thin
+    ? `${bundle.skillName} ${bundle.objective} ${bundle.lessonTitle}`.trim()
+    : `${question} ${bundle.skillName}`.trim();
+
+  const outcome = await runTool(searchCurriculumTool, {
+    query,
+    subjectId: opts.subjectId ?? null,
+    skillId: bundle.skillId,
+    gradeLevelId: opts.gradeLevelId ?? null,
+    limit: MAX_SUPPORT_CHUNKS,
+  });
+  const hits = outcome.ok ? (outcome.data ?? []) : [];
+  if (hits.length === 0) return;
+
+  bundle.lessonBody = `${bundle.lessonBody}${SUPPORT_HEADING}\n${renderSupportingMaterial(hits)}`;
 }

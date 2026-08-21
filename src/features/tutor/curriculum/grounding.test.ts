@@ -45,6 +45,17 @@ function mockHits(count: number) {
   );
 }
 
+function row(overrides: Partial<{ title: string; content: string }> = {}) {
+  return {
+    _id: "row-1",
+    sourceType: "definition",
+    sourceId: "src-1",
+    title: overrides.title ?? "Counting on",
+    content: overrides.content ?? "Count on from the bigger number to add quickly.",
+    score: 1,
+  };
+}
+
 describe("augmentWithSupportingMaterial", () => {
   it("folds supporting material into a thin lesson body", async () => {
     mockHits(2);
@@ -90,6 +101,32 @@ describe("augmentWithSupportingMaterial", () => {
     await augmentWithSupportingMaterial(b, {});
 
     expect(b.lessonBody).toBe("Short lesson.");
+  });
+
+  it("full lesson + substantive question retrieves from the QUESTION, not the skill name", async () => {
+    const aggregate = vi
+      .spyOn(CurriculumChunkModel, "aggregate")
+      .mockResolvedValue([{ ...row(), title: "Numerator", content: "Top number of a fraction.", score: 2 }]);
+    const b = bundle("A complete lesson body. ".repeat(40));
+
+    await augmentWithSupportingMaterial(b, { userMessage: "What is a numerator in a fraction?" });
+
+    expect(b.lessonBody).toContain("SUPPORTING MATERIAL FROM THE CURRICULUM:");
+    expect(b.lessonBody).toContain("Top number of a fraction.");
+    // The query sent to $search is derived from the child's question.
+    const pipeline = aggregate.mock.calls[0][0] as unknown as Array<Record<string, unknown>>;
+    expect(JSON.stringify(pipeline[0])).toContain("numerator");
+  });
+
+  it("full lesson + tiny question does not retrieve at all", async () => {
+    const aggregate = vi.spyOn(CurriculumChunkModel, "aggregate");
+    const body = "A complete lesson body. ".repeat(40);
+    const b = bundle(body);
+
+    await augmentWithSupportingMaterial(b, { userMessage: "ok" });
+
+    expect(b.lessonBody).toBe(body);
+    expect(aggregate).not.toHaveBeenCalled();
   });
 });
 

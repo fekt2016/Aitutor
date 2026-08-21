@@ -24,7 +24,7 @@ import {
   type TutorSessionDoc,
 } from "@/models";
 import { getProvider, getModels, type AiProvider, COST_PER_1K_IN, COST_PER_1K_OUT } from "../providers";
-import { resolveSkillForSession } from "../curriculum/service";
+import { getCurrentLessonTool } from "../tools/curriculum";
 import { augmentWithSupportingMaterial } from "../curriculum/grounding";
 import { buildContextBundle, recentTurns, type MemoryTurn } from "../memory/builder";
 import { buildSystemPrompt, TUTOR_ENVELOPE_SCHEMA } from "../prompts/templates";
@@ -79,10 +79,15 @@ export class TutorOrchestrator {
   async handleTurn(input: TurnInput): Promise<TurnResult> {
     const { session } = input;
 
-    const curriculum = await resolveSkillForSession(session, input.student.gradeLevelId ?? null);
-    // §6.3: thin lesson → pull supporting material from the curriculum corpus
-    // so the model reasons over the knowledge base instead of inventing.
+    const curriculum = await getCurrentLessonTool.execute({
+      session,
+      gradeLevelId: input.student.gradeLevelId ?? null,
+    });
+    // §6.3: fold supporting material into thin lessons, or support the child's
+    // specific question — the model reasons over the knowledge base, not
+    // invention. Routed through the §15 tool layer (validated + audited).
     await augmentWithSupportingMaterial(curriculum, {
+      userMessage: input.userMessage,
       subjectId: session.subjectId ? session.subjectId.toString() : null,
       gradeLevelId: input.student.gradeLevelId ?? null,
     });
