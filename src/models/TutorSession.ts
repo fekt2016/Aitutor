@@ -60,7 +60,9 @@ const tutorSessionSchema = new Schema(
         values: ["completed", "student_ended", "timeout", "abandoned"],
         message: "Unknown completion reason.",
       },
-      default: "",
+      // null until the session ends — "" would fail its own enum validation
+      // on create() (defaults are validated), which 400'd every new session.
+      default: null,
     },
     summary: {
       type: String,

@@ -67,12 +67,11 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 ## Phase 1 — Tutor MVP (walking skeleton)
 
-> Working branch: `phase/1-tutor-mvp` (pushed). Test/debug on the branch before any merge to main.
-> Env additions this phase (`.env.example` is gitignored — new vars are documented here):
+> Working branch: `phase/1-tutor-mvp` (merged to `main`). Test/debug on the branch before any merge to main.
+> Env additions this phase (`.env*` gitignored — new vars are documented here):
 > `AI_PROVIDER` (openai), `OPENAI_API_KEY`, `OPENAI_MODEL_TUTOR` (gpt-4o-mini),
-> `OPENAI_MODEL_STRUCTURED` (gpt-4o-mini).
-> BLOCKED ON: real Atlas `MONGO_URL` + `OPENAI_API_KEY` in `.env` for seed + live E2E
-> (placeholders `<cluster>`/empty remain; `npm run seed` fails `querySrv EBADNAME`).
+> `OPENAI_MODEL_STRONG`, `OPENAI_MODEL_STRUCTURED`, `OPENAI_MODEL_SUMMARY`,
+> `OPENAI_EMBEDDING_MODEL`.
 
 - [x] Provider abstraction (`AiProvider` interface + factory + fallback)
 - [x] OpenAI adapter (non-streaming structured + streaming + moderation) — `src/features/tutor/providers/`
@@ -85,11 +84,11 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 - [x] Message + session caps (DB-backed daily/session caps for MVP; Upstash later) — `src/features/tutor/caps.ts`
 - [x] Tutor UI: session flow, MCQ + free-text widgets, hint reveal, encouragement, end-of-session summary — `src/app/tutor/`
 - [x] Student dashboard CTA → `/tutor`
-- [~] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (4 skills, 5 items each) — `scripts/seed.ts` written, **not run** (DB blocked)
-- [x] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) — 82 new tests, 127 total green
+- [x] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (4 skills, 5 items each) — `scripts/seed.ts`, run against real Atlas 2026-08-21 ✓
+- [x] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) — 130 tests green
 - [x] AI cost per session logged (UsageLog)
-- [ ] Live E2E verify (seed → login student → tutor session → streamed turn → end) — blocked on real `.env`
-- [ ] `scripts/verify-phase0.sh` re-run to confirm no regressions — blocked on real `.env`
+- [x] Fix: `completionReason` default `""` failed its own enum → every session create 400'd (regression test added, `src/models/tutor-session.test.ts`)
+- [~] Live E2E verify (seed ✓ · subjects shown ✓ · session create/stream/end — re-verify after dev-server restart; schema changed)
 
 ## Phase 2 — Curriculum integration
 
