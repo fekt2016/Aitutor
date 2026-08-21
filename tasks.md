@@ -89,7 +89,10 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 - [x] AI cost per session logged (UsageLog)
 - [x] Fix: `completionReason` default `""` failed its own enum → every session create 400'd (regression test added, `src/models/tutor-session.test.ts`)
 - [x] Fix: OpenAI Moderation 429 faked `flagged=true` → every benign turn blocked; now the local classifier verdict stands on provider unavailability + 60s cooldown + typed `ModerationUnavailableError` + real status/message logging + SDK timeout/retry caps (§18; 5 policy tests)
-- [~] Live E2E verify (seed ✓ · subjects shown ✓ · session create/stream/end — re-verify after dev-server restart; schema changed)
+- [~] Live E2E verify — `scripts/verify-tutor.sh` added: 9/10 steps pass live
+      (session create + skill grounding ✓, blocked-input safety probe ✓,
+      transcript ✓, end ✓, cross-student isolation 403 ✓); only the streamed
+      LLM turn awaits the OpenAI quota fix (run without SKIP_LLM_TURN=1)
 
 ## Phase 2 — Curriculum integration
 
