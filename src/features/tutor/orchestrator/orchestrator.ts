@@ -25,6 +25,7 @@ import {
 } from "@/models";
 import { getProvider, getModels, type AiProvider, COST_PER_1K_IN, COST_PER_1K_OUT } from "../providers";
 import { resolveSkillForSession } from "../curriculum/service";
+import { augmentWithSupportingMaterial } from "../curriculum/grounding";
 import { buildContextBundle, recentTurns, type MemoryTurn } from "../memory/builder";
 import { buildSystemPrompt, TUTOR_ENVELOPE_SCHEMA } from "../prompts/templates";
 import { moderateInput } from "../safety/moderation";
@@ -79,6 +80,12 @@ export class TutorOrchestrator {
     const { session } = input;
 
     const curriculum = await resolveSkillForSession(session, input.student.gradeLevelId ?? null);
+    // §6.3: thin lesson → pull supporting material from the curriculum corpus
+    // so the model reasons over the knowledge base instead of inventing.
+    await augmentWithSupportingMaterial(curriculum, {
+      subjectId: session.subjectId ? session.subjectId.toString() : null,
+      gradeLevelId: input.student.gradeLevelId ?? null,
+    });
     const messages = await TutorMessageModel.find({ sessionId: session._id })
       .sort({ createdAt: 1 })
       .limit(30)

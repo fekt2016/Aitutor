@@ -20,6 +20,7 @@ import "./ContentStandard";
 import "./Skill";
 import "./Lesson";
 import "./PracticeItem";
+import "./CurriculumChunk";
 
 export { UserModel, toPublicUser, AGE_BANDS, isAgeBand, type AgeBand, type User } from "./User";
 export { ParentChildModel, type ParentChild } from "./ParentChild";
@@ -56,3 +57,9 @@ export {
   type PracticeItem,
   type PracticeItemType,
 } from "./PracticeItem";
+export {
+  CurriculumChunkModel,
+  CHUNK_SOURCE_TYPES,
+  type CurriculumChunk,
+  type ChunkSourceType,
+} from "./CurriculumChunk";

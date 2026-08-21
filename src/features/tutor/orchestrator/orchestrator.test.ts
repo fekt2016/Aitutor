@@ -36,6 +36,12 @@ vi.mock("../curriculum/service", () => ({
   resolveSkillForSession: vi.fn(),
 }));
 
+// Grounding hits the real CurriculumChunk collection — keep orchestrator
+// scenarios hermetic (no DB); grounding itself has dedicated tests.
+vi.mock("../curriculum/grounding", () => ({
+  augmentWithSupportingMaterial: vi.fn(),
+}));
+
 import {
   TutorMessageModel,
   TutorSessionModel,
