@@ -109,7 +109,10 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
       (`npm run backfill:chunks [-- --embed]`), **40 chunks live on Atlas**;
       embeddings pending quota fix; Atlas Search index "curriculum_chunks" not
       created yet ($search currently returns empty → text tiers serve)
-- [ ] Curriculum service + tools (`search_curriculum`, `get_current_lesson`)
+- [x] Curriculum service + tools (`get_current_lesson`, `search_curriculum`) —
+      `src/features/tutor/tools/` (§15 contract: read-only, validated, audited,
+      never-throw); grounding owns per-turn retrieval policy (thin lesson →
+      skill query; full lesson + question → question-aware query)
 - [~] Hybrid retrieval — $text→regex fallback tiers **live-verified** (4/4 natural-language
       queries hit relevant chunks); $search fall-through fixed (empty-but-successful
       Tier A no longer short-circuits); Vector tier ready in provider (`embed()`),
