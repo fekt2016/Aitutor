@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx --env-file=.env scripts/seed.ts",
+    "create:admin": "tsx --env-file=.env scripts/create-admin.ts",
     "backfill:chunks": "tsx --env-file=.env scripts/backfill-chunks.ts",
     "eval:retrieval": "tsx --env-file=.env eval/run-retrieval.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",

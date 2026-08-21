@@ -103,7 +103,18 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 > (same key powers chat). Needs billing top-up or a new key before E2E tutor
 > verification can resume.
 
-- [ ] Strand / SubStrand / ContentStandard / Skill / Lesson / Item collections + admin CRUD
+- [x] Strand / SubStrand / ContentStandard / Skill / Lesson / Item collections +
+      admin CRUD — collections existed since Phase 0 seed; registry-driven admin
+      API added (`/api/v1/admin/curriculum/tree`, `POST /[type]`,
+      `PATCH|DELETE /[type]/[id]`, `GET /[type]/[id]/grounded`): §3 role gate,
+      per-type field whitelist, soft delete for content rows vs guarded hard
+      delete for taxonomy nodes, chunk reindex on every content write.
+      15 hermetic route tests (`src/features/curriculum/admin/admin-curriculum.test.ts`)
+- [~] Admin curriculum editor UI + grounded lesson view — `/admin/curriculum`
+      (role-gated server page + client editor: taxonomy tree with create-then-edit
+      "+ level" buttons, skill/lesson/item editors, grounded view tab showing the
+      exact bundle + retrieval chunks). Code complete; **live verify pending**
+      (needs dev server). Admin bootstrap: `npm run create:admin` ✓ ran on Atlas
 - [~] CurriculumChunk + Atlas Search index + embeddings — model ✓, chunker ✓
       (`src/features/tutor/curriculum/chunker.ts`), backfill script ✓
       (`npm run backfill:chunks [-- --embed]`), **40 chunks live on Atlas**;
@@ -118,7 +129,6 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
       Tier A no longer short-circuits); Vector tier ready in provider (`embed()`),
       needs quota + Atlas Vector index
 - [x] Grounding: thin lessons augmented from curriculum corpus, wired into orchestrator (`src/features/tutor/curriculum/grounding.ts`)
-- [ ] Admin curriculum editor UI + grounded lesson view
 - [x] Retrieval + grounding evals (§36) — `eval/` (scenarios as data + pure scorers +
       live runner): `npm run eval:retrieval` against real Atlas — **14/14 pass,
       hit@3 100%, MRR 1.00** (8 positive NL queries incl. sub-3-char blends edge
