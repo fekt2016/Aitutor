@@ -20,7 +20,8 @@ export const THIN_LESSON_CHARS = 600;
 /** Questions shorter than this rarely name a retrievable concept. */
 const MIN_QUESTION_CHARS = 8;
 const MAX_SUPPORT_CHUNKS = 3;
-const SUPPORT_HEADING = "\n\nSUPPORTING MATERIAL FROM THE CURRICULUM:";
+/** Marker folded into lessonBody when supporting material was appended. */
+export const SUPPORT_MARKER = "\n\nSUPPORTING MATERIAL FROM THE CURRICULUM:";
 
 export function renderSupportingMaterial(hits: CurriculumHit[]): string {
   return hits.map((hit) => `- ${hit.title ? `${hit.title}: ` : ""}${hit.content}`).join("\n");
@@ -53,5 +54,5 @@ export async function augmentWithSupportingMaterial(
   const hits = outcome.ok ? (outcome.data ?? []) : [];
   if (hits.length === 0) return;
 
-  bundle.lessonBody = `${bundle.lessonBody}${SUPPORT_HEADING}\n${renderSupportingMaterial(hits)}`;
+  bundle.lessonBody = `${bundle.lessonBody}${SUPPORT_MARKER}\n${renderSupportingMaterial(hits)}`;
 }

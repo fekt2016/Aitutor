@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "backfill:chunks": "tsx --env-file=.env scripts/backfill-chunks.ts",
+    "eval:retrieval": "tsx --env-file=.env eval/run-retrieval.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\""
   },

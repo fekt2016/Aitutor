@@ -119,7 +119,14 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
       needs quota + Atlas Vector index
 - [x] Grounding: thin lessons augmented from curriculum corpus, wired into orchestrator (`src/features/tutor/curriculum/grounding.ts`)
 - [ ] Admin curriculum editor UI + grounded lesson view
-- [ ] Retrieval + grounding evals
+- [x] Retrieval + grounding evals (§36) — `eval/` (scenarios as data + pure scorers +
+      live runner): `npm run eval:retrieval` against real Atlas — **14/14 pass,
+      hit@3 100%, MRR 1.00** (8 positive NL queries incl. sub-3-char blends edge
+      case; 2 negative controls return no relevant hits); grounding policy 4/4
+      (thin→skill-context support, full+question→question-aware support, tiny
+      message → no retrieval, off-corpus question stays on-curriculum). Gate:
+      hit@k ≥ 80% + grounding 100%, non-zero exit on regression. Scorer unit
+      tests in `tests/eval-score.test.ts` (180 tests green)
 
 ## Phase 3 — Adaptive engine
 
