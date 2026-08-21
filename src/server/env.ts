@@ -18,6 +18,12 @@ export interface Env {
   NEXTAUTH_URL: string;
   APP_URL: string;
   BCRYPT_SALT_ROUNDS?: string;
+  /** Active AI provider adapter ("openai" default; plan §8.3). */
+  AI_PROVIDER?: string;
+  /** OpenAI credentials + model routing (plan §8.2, §9). */
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL_TUTOR?: string;
+  OPENAI_MODEL_STRUCTURED?: string;
   /** Message cap per tutor session (plan §28, §30). */
   SESSION_MSG_CAP: number;
   /** Session cap per student per day. */
@@ -68,7 +74,11 @@ function encodePassword(password: string): string {
 
 function resolveMongoUrl(source: Record<string, string | undefined>): string {
   const raw = requireString(source, "MONGO_URL");
-  const password = source.DATABASE_PASSWORD;
+  return substitutePassword(raw, source.DATABASE_PASSWORD);
+}
+
+/** Password substitution shared with scripts (seed) that only need the DB URL. */
+export function substitutePassword(raw: string, password: string | undefined): string {
   if (!password) return raw;
 
   // Atlas template: mongodb+srv://user:<password>@cluster/...
@@ -99,6 +109,10 @@ export function getEnv(source: NodeJS.ProcessEnv = process.env): Env {
     APP_URL:
       source.NEXT_PUBLIC_APP_URL?.trim() || source.NEXTAUTH_URL?.trim() || "http://localhost:3000",
     BCRYPT_SALT_ROUNDS: source.BCRYPT_SALT_ROUNDS,
+    AI_PROVIDER: source.AI_PROVIDER?.trim() || "openai",
+    OPENAI_API_KEY: source.OPENAI_API_KEY?.trim(),
+    OPENAI_MODEL_TUTOR: source.OPENAI_MODEL_TUTOR?.trim(),
+    OPENAI_MODEL_STRUCTURED: source.OPENAI_MODEL_STRUCTURED?.trim(),
     SESSION_MSG_CAP: requireInt(source, "SESSION_MSG_CAP", 30),
     DAILY_SESSION_CAP: requireInt(source, "DAILY_SESSION_CAP", 3),
     RETENTION_DAYS: requireInt(source, "RETENTION_DAYS", 30),

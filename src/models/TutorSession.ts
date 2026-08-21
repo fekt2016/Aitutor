@@ -21,6 +21,11 @@ const tutorSessionSchema = new Schema(
       ref: "Subject",
       default: null,
     },
+    skillId: {
+      type: Schema.Types.ObjectId,
+      ref: "Skill",
+      default: null,
+    },
     goal: {
       type: String,
       trim: true,
@@ -47,6 +52,16 @@ const tutorSessionSchema = new Schema(
     },
     endedAt: {
       type: Date,
+      default: null,
+    },
+    completionReason: {
+      type: String,
+      enum: {
+        values: ["completed", "student_ended", "timeout", "abandoned"],
+        message: "Unknown completion reason.",
+      },
+      // null until the session ends — "" would fail its own enum validation
+      // on create() (defaults are validated), which 400'd every new session.
       default: null,
     },
     summary: {
@@ -81,6 +96,9 @@ tutorSessionSchema.index({ studentId: 1, startedAt: -1 });
 tutorSessionSchema.index({ status: 1, startedAt: -1 });
 
 export type TutorSession = InferSchemaType<typeof tutorSessionSchema>;
+
+/** A hydrated/lean session doc carrying `_id` (what routes/services pass around). */
+export type TutorSessionDoc = TutorSession & { _id: mongoose.Types.ObjectId };
 
 export const TutorSessionModel =
   (mongoose.models.TutorSession as Model<TutorSession> | undefined) ??

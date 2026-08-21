@@ -4,6 +4,12 @@ Tracks all implementation work for the EazWorld AI Tutor (independent project).
 Plan: [`EazWorld-AI-Tutor-Plan.md`](./EazWorld-AI-Tutor-Plan.md)
 Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
+> **Git workflow (user-directed):** every new phase gets its **own branch** off
+> `main`, named `phase/<n>-<slug>` (e.g. `phase/1-tutor-mvp`). Work happens on the
+> branch and it's pushed to `origin` so progress is backed up; `main` only receives
+> finished phase work. If we're mid-phase and a new phase starts, the current branch
+> is completed/merged first.
+
 ---
 
 ## Current milestone: Phase 0 — Foundation (done)
@@ -61,19 +67,28 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 ## Phase 1 — Tutor MVP (walking skeleton)
 
-- [ ] Provider abstraction (`AiProvider` interface + factory + fallback)
-- [ ] OpenAI adapter (non-streaming, then streaming)
-- [ ] Tutor Orchestrator v1 (intents: explain / ask / hint / correct / recommend / smalltalk / unsafe)
-- [ ] Safety gate in/out (Mongoose/JSON-schema validation + Moderation API + keyword classifier)
-- [ ] TutorSession + TutorMessage + LearningSignal models
-- [ ] SkillMastery scoring v1
-- [ ] Streaming message endpoint (`POST /api/v1/tutor/sessions/:id/messages`)
-- [ ] Session create / get / end endpoints
-- [ ] Message + session caps (rate limiting, Upstash)
-- [ ] Tutor UI: mascot avatar, session flow, MCQ + free-text widgets, hint reveal, encouragement, end-of-session summary
-- [ ] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (2 skills per subject, 3–5 items each)
-- [ ] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) gated in CI
-- [ ] AI cost per session logged (UsageLog)
+> Working branch: `phase/1-tutor-mvp` (merged to `main`). Test/debug on the branch before any merge to main.
+> Env additions this phase (`.env*` gitignored — new vars are documented here):
+> `AI_PROVIDER` (openai), `OPENAI_API_KEY`, `OPENAI_MODEL_TUTOR` (gpt-4o-mini),
+> `OPENAI_MODEL_STRONG`, `OPENAI_MODEL_STRUCTURED`, `OPENAI_MODEL_SUMMARY`,
+> `OPENAI_EMBEDDING_MODEL`.
+
+- [x] Provider abstraction (`AiProvider` interface + factory + fallback)
+- [x] OpenAI adapter (non-streaming structured + streaming + moderation) — `src/features/tutor/providers/`
+- [x] Tutor Orchestrator v1 (intents: explain / ask / hint / practice / correct / recommend / smalltalk / session_end; envelope; retry-then-fallback)
+- [x] Safety gate in/out (Mongoose/JSON-schema validation + Moderation API + keyword classifier + output leak checks) — `src/features/tutor/safety/`
+- [x] TutorSession (completionReason, skillId) + TutorMessage + LearningSignal + SkillMastery + SafetyEvent + UsageLog models
+- [x] SkillMastery scoring v1 (EMA + evidence gate) — `src/features/tutor/engine/mastery.ts`
+- [x] Streaming message endpoint (`POST /api/v1/tutor/sessions/:id/messages`, SSE: meta/delta/blocked/done/error)
+- [x] Session create / get / end endpoints
+- [x] Message + session caps (DB-backed daily/session caps for MVP; Upstash later) — `src/features/tutor/caps.ts`
+- [x] Tutor UI: session flow, MCQ + free-text widgets, hint reveal, encouragement, end-of-session summary — `src/app/tutor/`
+- [x] Student dashboard CTA → `/tutor`
+- [x] Seed Mathematics (Basic 1..4) + English Language (Basic 1..2): Subject → Strand → SubStrand → ContentStandard → Skill → Lesson → PracticeItem (4 skills, 5 items each) — `scripts/seed.ts`, run against real Atlas 2026-08-21 ✓
+- [x] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) — 130 tests green
+- [x] AI cost per session logged (UsageLog)
+- [x] Fix: `completionReason` default `""` failed its own enum → every session create 400'd (regression test added, `src/models/tutor-session.test.ts`)
+- [~] Live E2E verify (seed ✓ · subjects shown ✓ · session create/stream/end — re-verify after dev-server restart; schema changed)
 
 ## Phase 2 — Curriculum integration
 
@@ -141,4 +156,4 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 - Every phase's "Done when" criteria from the plan must pass (tests/evals + live end-to-end demo).
 - Do not add payment/billing, teacher features, native apps, real-time multi-user, offline mode, or a CMS without reopening scope.
-- Env-driven config via `.env`; keep `.env.example` template current.
+- Env-driven config via `.env` (user-directed: `.env*` gitignored; new config vars are documented in this tracker's phase sections).
