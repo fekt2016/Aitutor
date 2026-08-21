@@ -1,13 +1,16 @@
 /**
  * Moderation service (plan §18.2) — combines the deterministic local
- * classifier with the provider Moderation API. Fail-closed: if the API is
- * unreachable, the local verdict still stands and the turn is blocked when
- * flagged. Every flagged verdict persists a SafetyEvent (no content, ids
- * only). Never logs message content.
+ * classifier with the provider Moderation API. If the provider endpoint is
+ * unavailable (429/outage), THE LOCAL VERDICT STANDS: locally-flagged input
+ * still blocks, benign input proceeds through the remaining independent
+ * layers (prompt restrictions, output moderation, output validation).
+ * Unavailability is recorded as a SafetyEvent and a short cooldown stops
+ * every turn from paying the failing round-trip. Never logs message content.
  */
 import { AppError } from "@/lib/errors";
 import { SafetyEventModel } from "@/models";
 import type { AiProvider } from "../providers";
+import { ModerationUnavailableError } from "../providers/types";
 import { classifyInput, type SafetyCategory } from "./keywords";
 
 export interface ModerationVerdict {
@@ -20,6 +23,15 @@ interface ModerationInput {
   text: string;
   studentId?: string | null;
   sessionId?: string | null;
+}
+
+/** After a provider failure, skip the provider layer for this long. */
+const PROVIDER_COOLDOWN_MS = 60_000;
+let providerCooldownUntil = 0;
+
+/** Test hook — clears the provider cooldown between tests. */
+export function resetModerationCooldown(): void {
+  providerCooldownUntil = 0;
 }
 
 /**
@@ -38,14 +50,25 @@ export async function moderateInput(
     return { flagged: true, categories: local.categories, source: "local" };
   }
 
-  const providerResult = await provider.moderate({ text: input.text });
-  if (providerResult.flagged) {
-    const categories = providerResult.categories as SafetyCategory[];
-    await recordEvent(kind, categories, "provider_flagged", input);
-    return { flagged: true, categories, source: "provider" };
+  // Provider layer — skipped while cooling down after an outage/429.
+  if (Date.now() >= providerCooldownUntil) {
+    try {
+      const providerResult = await provider.moderate({ text: input.text });
+      if (providerResult.flagged) {
+        const categories = providerResult.categories as SafetyCategory[];
+        await recordEvent(kind, categories, "provider_flagged", input);
+        return { flagged: true, categories, source: "provider" };
+      }
+      return { flagged: false, categories: [], source: "provider" };
+    } catch (error) {
+      if (!(error instanceof ModerationUnavailableError)) throw error;
+      // §18: the local verdict stands when the provider is unreachable.
+      providerCooldownUntil = Date.now() + PROVIDER_COOLDOWN_MS;
+      await recordEvent(kind, [], "provider_unavailable", input);
+    }
   }
 
-  return { flagged: false, categories: [], source: "provider" };
+  return { flagged: false, categories: [], source: "local" };
 }
 
 async function recordEvent(

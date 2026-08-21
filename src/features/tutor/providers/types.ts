@@ -57,6 +57,21 @@ export interface ModerationRequest {
   text: string;
 }
 
+/**
+ * Thrown by adapters when the Moderation endpoint is unreachable or failing
+ * (network, 429 rate limit, 5xx, auth). The safety layer falls back to the
+ * local classifier (§18) — an adapter must NEVER fake a "flagged" verdict,
+ * which would silently block every benign turn.
+ */
+export class ModerationUnavailableError extends Error {
+  readonly status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "ModerationUnavailableError";
+    this.status = status;
+  }
+}
+
 export interface AiProvider {
   complete(req: CompletionRequest): Promise<CompletionResponse>;
   stream(req: CompletionRequest): AsyncIterable<StreamChunk>;

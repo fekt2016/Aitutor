@@ -21,6 +21,7 @@ import type {
   ModelMap,
   StreamChunk,
 } from "./types";
+import { ModerationUnavailableError } from "./types";
 
 export const OPENAI_MODEL_DEFAULTS: ModelMap = {
   tutor: "gpt-4o-mini",
@@ -45,7 +46,12 @@ export class OpenAIAdapter implements AiProvider {
         "OPENAI_API_KEY is not set. The tutor cannot run without a provider key."
       );
     }
-    this.client = new OpenAI({ apiKey });
+    this.client = new OpenAI({
+      apiKey,
+      // A child chat turn must never hang on the SDK default (~10 min).
+      timeout: 15_000,
+      maxRetries: 1,
+    });
     return this.client;
   }
 
@@ -122,11 +128,16 @@ export class OpenAIAdapter implements AiProvider {
         : [];
       return { flagged, categories };
     } catch (error) {
-      // Moderation must never fail open — fail closed with a flagged verdict.
-      console.error("[safety] moderation API call failed", {
-        name: error instanceof Error ? error.name : typeof error,
+      const e = error as { status?: number; message?: string };
+      // Observability only — request content is never logged (§19).
+      console.error("[safety] moderation API unavailable", {
+        status: e?.status ?? null,
+        message: e?.message ?? "unknown",
       });
-      return { flagged: true, categories: ["moderation_unavailable"] };
+      // Surface unavailability so the safety layer can fall back to the
+      // local classifier (§18). Faking "flagged" here would block every
+      // benign turn whenever this endpoint throttles.
+      throw new ModerationUnavailableError(e?.message ?? "moderation unavailable", e?.status);
     }
   }
 }

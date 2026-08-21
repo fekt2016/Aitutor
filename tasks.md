@@ -88,6 +88,7 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 - [x] Golden-scenario evals (safety, teaching-vs-answering, age appropriateness) — 130 tests green
 - [x] AI cost per session logged (UsageLog)
 - [x] Fix: `completionReason` default `""` failed its own enum → every session create 400'd (regression test added, `src/models/tutor-session.test.ts`)
+- [x] Fix: OpenAI Moderation 429 faked `flagged=true` → every benign turn blocked; now the local classifier verdict stands on provider unavailability + 60s cooldown + typed `ModerationUnavailableError` + real status/message logging + SDK timeout/retry caps (§18; 5 policy tests)
 - [~] Live E2E verify (seed ✓ · subjects shown ✓ · session create/stream/end — re-verify after dev-server restart; schema changed)
 
 ## Phase 2 — Curriculum integration
