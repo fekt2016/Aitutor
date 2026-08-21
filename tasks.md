@@ -95,10 +95,22 @@ Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` blocked
 
 > Working branch: `phase/2-curriculum`.
 
+> **Blocker (2026-08-21):** OpenAI account is out of quota (`insufficient_quota`,
+> HTTP 429 on every call). Blocks embedding backfill **and any live tutor turn**
+> (same key powers chat). Needs billing top-up or a new key before E2E tutor
+> verification can resume.
+
 - [ ] Strand / SubStrand / ContentStandard / Skill / Lesson / Item collections + admin CRUD
-- [~] CurriculumChunk + Atlas Search index + embeddings (model ✓ committed; chunk backfill script + embedding backfill next)
+- [~] CurriculumChunk + Atlas Search index + embeddings — model ✓, chunker ✓
+      (`src/features/tutor/curriculum/chunker.ts`), backfill script ✓
+      (`npm run backfill:chunks [-- --embed]`), **40 chunks live on Atlas**;
+      embeddings pending quota fix; Atlas Search index "curriculum_chunks" not
+      created yet ($search currently returns empty → text tiers serve)
 - [ ] Curriculum service + tools (`search_curriculum`, `get_current_lesson`)
-- [~] Hybrid retrieval (Atlas $search → $text → regex tiers ✓; Vector Search tier once embeddings exist)
+- [~] Hybrid retrieval — $text→regex fallback tiers **live-verified** (4/4 natural-language
+      queries hit relevant chunks); $search fall-through fixed (empty-but-successful
+      Tier A no longer short-circuits); Vector tier ready in provider (`embed()`),
+      needs quota + Atlas Vector index
 - [x] Grounding: thin lessons augmented from curriculum corpus, wired into orchestrator (`src/features/tutor/curriculum/grounding.ts`)
 - [ ] Admin curriculum editor UI + grounded lesson view
 - [ ] Retrieval + grounding evals
